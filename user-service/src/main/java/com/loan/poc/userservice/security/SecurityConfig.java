@@ -43,7 +43,7 @@ public class SecurityConfig {
         http.csrf(customizer -> customizer.disable()) // disable CSRF for APIs
             .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
-                                "/api/auth/**")
+                                "/api/auth/**", "/api/users/validate/**")
                                 .permitAll()
                         .anyRequest().authenticated()
                 )

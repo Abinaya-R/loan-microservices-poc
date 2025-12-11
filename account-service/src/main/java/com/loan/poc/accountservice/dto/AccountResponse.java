@@ -4,6 +4,9 @@ import lombok.Builder;
 import lombok.Data;
 import java.math.BigDecimal;
 
+import com.loan.poc.accountservice.model.AccountType;
+import com.loan.poc.accountservice.model.LoanStatus;
+
 @Data
 @Builder
 public class AccountResponse {
@@ -12,14 +15,9 @@ public class AccountResponse {
 
     private Long userId;
 
-    private String accountType;
+    private AccountType accountType;
 
     private BigDecimal balance;
 
-    private String status;
-
-    public Object map(Object object) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'map'");
-    }
+    private LoanStatus status;
 }
