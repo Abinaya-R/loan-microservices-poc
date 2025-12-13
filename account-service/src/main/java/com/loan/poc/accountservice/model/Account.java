@@ -3,6 +3,9 @@ package com.loan.poc.accountservice.model;
 import java.math.BigDecimal;
 import java.time.Instant;
 
+import com.loan.poc.accountservice.dto.AccountType;
+import com.loan.poc.accountservice.dto.LoanStatus;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;

@@ -1,4 +1,4 @@
-package com.loan.poc.accountservice.model;
+package com.loan.poc.accountservice.dto;
 
 public enum LoanStatus {
     NEW,

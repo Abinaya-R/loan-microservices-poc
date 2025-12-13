@@ -1,21 +1,16 @@
-package com.loan.poc.accountservice.dto;
+package com.loan.poc.paymentservice.dto;
 
-import lombok.Builder;
-import lombok.Data;
 import java.math.BigDecimal;
 
+import lombok.Data;
 
 @Data
-@Builder
 public class AccountResponse {
-
     private Long id;
-
     private Long userId;
-
     private AccountType accountType;
-
     private BigDecimal balance;
-
+    private BigDecimal loanAmount;
     private LoanStatus status;
 }
+

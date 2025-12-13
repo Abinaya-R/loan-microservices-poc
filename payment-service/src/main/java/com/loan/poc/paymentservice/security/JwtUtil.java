@@ -1,4 +1,4 @@
-package com.loan.poc.accountservice.security;
+package com.loan.poc.paymentservice.security;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
@@ -19,7 +19,7 @@ import javax.crypto.SecretKey;
  * 2. Extracts claims such as username, expiration etc.
  */
 @Component
-public class JWTUtil {
+public class JwtUtil {
 
     @Value("${jwt.secret}")
     private String secret;

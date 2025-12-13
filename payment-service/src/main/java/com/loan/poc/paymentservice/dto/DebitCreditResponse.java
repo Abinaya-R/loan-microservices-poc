@@ -1,4 +1,4 @@
-package com.loan.poc.accountservice.dto;
+package com.loan.poc.paymentservice.dto;
 
 
 import lombok.AllArgsConstructor;

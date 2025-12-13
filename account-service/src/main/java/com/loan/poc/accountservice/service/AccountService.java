@@ -13,12 +13,13 @@ import org.springframework.stereotype.Service;
 import com.loan.poc.accountservice.dto.AccountResponse;
 import com.loan.poc.accountservice.dto.CreateAccountRequest;
 import com.loan.poc.accountservice.dto.CreditRequest;
+import com.loan.poc.accountservice.dto.DebitCreditResponse;
 import com.loan.poc.accountservice.dto.DebitRequest;
 import com.loan.poc.accountservice.dto.UserValidationResponse;
 import com.loan.poc.accountservice.feign.UserClient;
 import com.loan.poc.accountservice.model.Account;
-import com.loan.poc.accountservice.model.AccountType;
-import com.loan.poc.accountservice.model.LoanStatus;
+import com.loan.poc.accountservice.dto.AccountType;
+import com.loan.poc.accountservice.dto.LoanStatus;
 import com.loan.poc.accountservice.repository.AccountRepository;
 
 @Service
@@ -100,10 +101,12 @@ public class AccountService {
         return ResponseEntity.ok(accounts);
     }
 
-     /**
+    
+    /**
      * Debit money from deposit OR loan repayment.
+     * Returns DebitCreditResponse instead of plain String.
      */
-    public ResponseEntity<String> debit(DebitRequest request) {
+    public ResponseEntity<DebitCreditResponse> debit(DebitRequest request) {
 
         Account acc = accountRepository.findById(request.getAccountId())
                 .orElseThrow(() -> new RuntimeException("Account not found"));
@@ -111,7 +114,11 @@ public class AccountService {
         if (acc.getAccountType() == AccountType.DEPOSIT) {
             // Deposit account → deduct normally
             if (acc.getBalance().compareTo(request.getAmount()) < 0) {
-                return ResponseEntity.badRequest().body("Insufficient balance");
+                return ResponseEntity.badRequest()
+                    .body(DebitCreditResponse.builder()
+                        .message("Insufficient balance")
+                        .success(false)
+                        .build());
             }
 
             acc.setBalance(acc.getBalance().subtract(request.getAmount()));
@@ -132,25 +139,36 @@ public class AccountService {
 
         accountRepository.save(acc);
 
-        return ResponseEntity.ok("Amount debited successfully");
+        return ResponseEntity.ok(DebitCreditResponse.builder()
+                .message("Amount debited successfully")
+                .success(true)
+                .build());
     }
 
     /**
      * Credit deposit accounts only.
+     * Returns DebitCreditResponse instead of plain String.
      */
-    public ResponseEntity<String> credit(CreditRequest request) {
+    public ResponseEntity<DebitCreditResponse> credit(CreditRequest request) {
 
         Account acc = accountRepository.findById(request.getAccountId())
                 .orElseThrow(() -> new RuntimeException("Account not found"));
 
         if (acc.getAccountType() != AccountType.DEPOSIT) {
-            return ResponseEntity.badRequest().body("Cannot credit a loan account");
+            return ResponseEntity.badRequest()
+                .body(DebitCreditResponse.builder()
+                    .message("Cannot credit a loan account")
+                    .success(false)
+                    .build());
         }
 
         acc.setBalance(acc.getBalance().add(request.getAmount()));
         accountRepository.save(acc);
 
-        return ResponseEntity.ok("Amount credited successfully");
+        return ResponseEntity.ok(DebitCreditResponse.builder()
+                .message("Amount credited successfully")
+                .success(true)
+                .build());
     }
 }
 

@@ -2,6 +2,7 @@ package com.loan.poc.accountservice.controller;
 
 import com.loan.poc.accountservice.dto.CreateAccountRequest;
 import com.loan.poc.accountservice.dto.CreditRequest;
+import com.loan.poc.accountservice.dto.DebitCreditResponse;
 import com.loan.poc.accountservice.dto.DebitRequest;
 import com.loan.poc.accountservice.dto.AccountResponse;
 import com.loan.poc.accountservice.service.AccountService;
@@ -43,12 +44,12 @@ public class AccountController {
     }
 
      @PostMapping("/debit")
-    public ResponseEntity<String> debit(@RequestBody DebitRequest request) {
+    public ResponseEntity<DebitCreditResponse> debit(@RequestBody DebitRequest request) {
         return accountService.debit(request);
     }
 
     @PostMapping("/credit")
-    public ResponseEntity<String> credit(@RequestBody CreditRequest request) {
+    public ResponseEntity<DebitCreditResponse> credit(@RequestBody CreditRequest request) {
         return accountService.credit(request);
     }
 }
