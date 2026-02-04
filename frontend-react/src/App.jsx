@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import {
   Box,
   Button,
@@ -13,6 +13,7 @@ import {
   Stack,
   Code,
   FormErrorMessage,
+  Divider,
 } from "@chakra-ui/react";
 import { Formik, Form, Field } from "formik";
 import * as Yup from "yup";
@@ -29,10 +30,14 @@ import { payLoan, getPaymentById } from "./api/payments.js";
 export default function App() {
   // JWT token used by protected endpoints.
   const [authToken, setAuthToken] = useState("");
+  const [lastRegisteredUserId, setLastRegisteredUserId] = useState(null);
 
   // Output area state.
   const [output, setOutput] = useState("");
   const [error, setError] = useState("");
+  const [lastAction, setLastAction] = useState("");
+  const [createAccountNotice, setCreateAccountNotice] = useState("");
+  const [createAccountError, setCreateAccountError] = useState("");
 
   function resetMessages() {
     setOutput("");
@@ -89,7 +94,9 @@ export default function App() {
   async function handleRegister(values) {
     resetMessages();
     try {
+      setLastAction("register");
       const res = await registerUser(values);
+      setLastRegisteredUserId(res?.userId ?? null);
       setOutput(res);
     } catch (err) {
       setError(err.message);
@@ -99,6 +106,7 @@ export default function App() {
   async function handleLogin(values) {
     resetMessages();
     try {
+      setLastAction("login");
       const token = await loginUser(values);
       setAuthToken(token);
       setOutput({ token });
@@ -110,6 +118,7 @@ export default function App() {
   async function handleGetUser(values) {
     resetMessages();
     try {
+      setLastAction("getUser");
       const res = await getUserById(values.userId);
       setOutput(res);
     } catch (err) {
@@ -119,10 +128,15 @@ export default function App() {
 
   async function handleCreateAccount(values) {
     resetMessages();
+    setCreateAccountNotice("");
+    setCreateAccountError("");
     try {
+      setLastAction("createAccount");
       const res = await createAccount(values, authToken);
+      setCreateAccountNotice("Account created successfully. Please scroll down to view the details.");
       setOutput(res);
     } catch (err) {
+      setCreateAccountError(err.message);
       setError(err.message);
     }
   }
@@ -130,6 +144,7 @@ export default function App() {
   async function handleGetAccountById(values) {
     resetMessages();
     try {
+      setLastAction("getAccount");
       const res = await getAccountById(values.accountId, authToken);
       setOutput(res);
     } catch (err) {
@@ -140,6 +155,7 @@ export default function App() {
   async function handleGetAccountsByUserId(values) {
     resetMessages();
     try {
+      setLastAction("getAccounts");
       const res = await getAccountsByUserId(values.userId, authToken);
       setOutput(res);
     } catch (err) {
@@ -150,6 +166,7 @@ export default function App() {
   async function handleDebit(values) {
     resetMessages();
     try {
+      setLastAction("debit");
       const res = await debitAccount(values, authToken);
       setOutput(res);
     } catch (err) {
@@ -160,6 +177,7 @@ export default function App() {
   async function handleCredit(values) {
     resetMessages();
     try {
+      setLastAction("credit");
       const res = await creditAccount(values, authToken);
       setOutput(res);
     } catch (err) {
@@ -170,6 +188,7 @@ export default function App() {
   async function handlePayLoan(values) {
     resetMessages();
     try {
+      setLastAction("payLoan");
       const res = await payLoan(values, authToken);
       setOutput(res);
     } catch (err) {
@@ -180,11 +199,125 @@ export default function App() {
   async function handleGetPaymentById(values) {
     resetMessages();
     try {
+      setLastAction("getPayment");
       const res = await getPaymentById(values.paymentId, authToken);
       setOutput(res);
     } catch (err) {
       setError(err.message);
     }
+  }
+
+  function renderKeyValue(label, value) {
+    return (
+      <Box>
+        <Text fontSize="xs" color="gray.500" textTransform="uppercase" letterSpacing="wide">
+          {label}
+        </Text>
+        <Text fontSize="md">{String(value ?? "-")}</Text>
+      </Box>
+    );
+  }
+
+  function renderUserCard(user) {
+    return (
+      <Box borderWidth="1px" borderRadius="lg" p={4}>
+        <Heading size="sm" mb={3}>
+          User Details
+        </Heading>
+        <Stack spacing={3}>
+          {renderKeyValue("User ID", user?.id)}
+          {renderKeyValue("Username", user?.username)}
+          {renderKeyValue("Roles", user?.roles)}
+          {renderKeyValue("Created At", user?.createdAt)}
+        </Stack>
+      </Box>
+    );
+  }
+
+  function renderAccountCard(account, title = "Account") {
+    return (
+      <Box borderWidth="1px" borderRadius="lg" p={4}>
+        <Heading size="sm" mb={3}>
+          {title}
+        </Heading>
+        <Stack spacing={3}>
+          {renderKeyValue("Account ID", account?.id)}
+          {renderKeyValue("User ID", account?.userId)}
+          {renderKeyValue("Type", account?.accountType)}
+          {renderKeyValue("Balance", account?.balance)}
+          {renderKeyValue("Status", account?.status)}
+        </Stack>
+      </Box>
+    );
+  }
+
+  function renderPaymentCard(payment) {
+    return (
+      <Box borderWidth="1px" borderRadius="lg" p={4}>
+        <Heading size="sm" mb={3}>
+          Payment Details
+        </Heading>
+        <Stack spacing={3}>
+          {renderKeyValue("Payment ID", payment?.id)}
+          {renderKeyValue("User ID", payment?.userId)}
+          {renderKeyValue("Loan Account ID", payment?.loanAccountId)}
+          {renderKeyValue("Amount", payment?.amount)}
+          {renderKeyValue("Type", payment?.txType)}
+          {renderKeyValue("Status", payment?.status)}
+          {renderKeyValue("Transaction ID", payment?.transactionId)}
+          {renderKeyValue("Description", payment?.description)}
+          {renderKeyValue("Created At", payment?.createdAt)}
+        </Stack>
+      </Box>
+    );
+  }
+
+  function renderOutputCard() {
+    if (error) {
+      return (
+        <Box borderWidth="1px" borderRadius="lg" p={4} borderColor="red.200" bg="red.50">
+          <Heading size="sm" mb={2} color="red.700">
+            Error
+          </Heading>
+          <Text color="red.700">{error}</Text>
+        </Box>
+      );
+    }
+
+    if (!output) return "Run an action to see output.";
+
+    if (lastAction === "createAccount") {
+      return (
+        <Stack spacing={4}>
+          <Box borderWidth="1px" borderRadius="lg" p={4} borderColor="green.200" bg="green.50">
+            <Heading size="sm" mb={2} color="green.700">
+              Account Created Successfully
+            </Heading>
+            <Text color="green.700">Please scroll down to view the details.</Text>
+          </Box>
+          {renderAccountCard(output, "Account Details")}
+        </Stack>
+      );
+    }
+
+    if (lastAction === "getUser") return renderUserCard(output);
+    if (lastAction === "getAccount") return renderAccountCard(output, "Account Details");
+    if (lastAction === "getAccounts" && Array.isArray(output)) {
+      return (
+        <Stack spacing={4}>
+          {output.map((account) => (
+            <Box key={account.id}>{renderAccountCard(account, "Account")}</Box>
+          ))}
+        </Stack>
+      );
+    }
+    if (lastAction === "getPayment") return renderPaymentCard(output);
+
+    return (
+      <Code p={3} display="block" whiteSpace="pre-wrap">
+        {JSON.stringify(output, null, 2)}
+      </Code>
+    );
   }
 
   return (
@@ -221,6 +354,11 @@ export default function App() {
             <Heading size="md" mb={4}>
               Register User
             </Heading>
+            {lastRegisteredUserId ? (
+              <Text fontSize="sm" color="green.600" mb={3}>
+                Registered! Your User ID is {lastRegisteredUserId}. Please remember this for future requests.
+              </Text>
+            ) : null}
             {/* Formik manages the form state and passes values to handleRegister */}
             <Formik
               initialValues={{ username: "", password: "" }}
@@ -328,6 +466,20 @@ export default function App() {
             <Heading size="md" mb={4}>
               Create Account
             </Heading>
+            {createAccountNotice ? (
+              <Box borderWidth="1px" borderColor="green.200" bg="green.50" p={3} borderRadius="md" mb={3}>
+                <Text fontSize="sm" color="green.700">
+                  {createAccountNotice}
+                </Text>
+              </Box>
+            ) : null}
+            {createAccountError ? (
+              <Box borderWidth="1px" borderColor="red.200" bg="red.50" p={3} borderRadius="md" mb={3}>
+                <Text fontSize="sm" color="red.700">
+                  {createAccountError}
+                </Text>
+              </Box>
+            ) : null}
             {/* Create either a DEPOSIT or LOAN account */}
             <Formik
               initialValues={{ userId: "", accountType: "DEPOSIT", initialDeposit: "" }}
@@ -611,15 +763,13 @@ export default function App() {
           <Heading size="md" mb={3}>
             Output
           </Heading>
-          {error ? (
-            <Code colorScheme="red" p={3} display="block" whiteSpace="pre-wrap">
-              {error}
-            </Code>
-          ) : (
-            <Code p={3} display="block" whiteSpace="pre-wrap">
-              {output ? JSON.stringify(output, null, 2) : "Run an action to see output."}
-            </Code>
-          )}
+          <Box>
+            {renderOutputCard()}
+            <Divider mt={4} />
+            <Text fontSize="xs" color="gray.500" mt={2}>
+              Raw output is shown for non-GET actions.
+            </Text>
+          </Box>
         </Box>
       </Box>
     </Box>

@@ -38,7 +38,7 @@ public class AuthController {
         u.setPasswordHash(passwordEncoder.encode(req.getPassword()));
         u.setRoles("ROLE_USER");
         repo.save(u);
-        return ResponseEntity.ok("Registered");
+        return ResponseEntity.ok(new RegisterResponse("Registered", u.getId()));
     }
 
     @PostMapping("/login")
